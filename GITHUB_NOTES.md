@@ -1,6 +1,6 @@
 # Repository scope
 
-This repository contains experiment code, training scripts, data preprocessing, evaluation tools and viewer generators. Downloaded data, feature caches, checkpoints and generated viewers are excluded from Git and remain local.
+This repository contains experiment code, training scripts, data preprocessing, evaluation tools and viewer generators. Downloaded data, feature caches, checkpoints are excluded from Git and remain local. Selected HTML viewer snapshots are included under html/ with the small sample data needed to display them.
 
 - Python 3.10; current experiment environment: PyTorch 2.9.0, NumPy, Pillow.
 - Upstream MathWriting resources: https://github.com/google-research/google-research/tree/master/mathwriting (pinned provenance in provenance.json).
