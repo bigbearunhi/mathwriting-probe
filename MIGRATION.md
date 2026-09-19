@@ -28,7 +28,7 @@ gh release download migration-bezier002-20260919 -R bigbearunhi/mathwriting-prob
 (cd migration-assets && sha256sum -c SHA256SUMS)
 mkdir -p data
 cat migration-assets/raw-mathwriting.tgz.part-* > data/mathwriting-2024.tgz
-tar -xzf migration-assets/cache-bezier002.tar.gz
+cat migration-assets/cache-bezier002.tar.gz.part-* | tar -xzf -
 tar -xzf migration-assets/training-snapshot.tar.gz
 ```
 
