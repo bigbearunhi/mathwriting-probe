@@ -1,0 +1,10 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const html=fs.readFileSync('viewer_templates/preprocess.html','utf8');
+assert(html.includes('id="tolerance"'),'Missing compression selector');
+const els={},ctx=new Proxy({},{get:()=>()=>{}});
+for(const id of ['split','eligible','rec','sort','query','zoom','tolerance','gaps','points','prev','next','counter','empty','main','id','stats','truth','predictionbox','prediction','raw','processed','overlay'])els[id]={value:id==='zoom'?'1':id==='tolerance'?'0.01':'',checked:false,parentElement:{clientWidth:700},style:{},getContext:()=>ctx};
+const variant=(n,e)=>({segments:n,frames:2*n,eligible:e,curves:[],mean_error:0,max_error:0});
+const r={id:'a',split:'train',label:'x',recognition:'未评估',points:20,strokes:[[[0,0],[1,1]]],bounds:[0,0,1,1],...variant(10,true),variants:{'0.01':variant(10,true),'0.02':variant(5,false)}};
+const sandbox={document:{getElementById:id=>els[id]},window:{addEventListener:()=>{}},SAMPLES:[r,{...r,id:'b'}],devicePixelRatio:1};vm.createContext(sandbox);vm.runInContext(html.match(/<script>([\s\S]*?)<\/script>/)[1],sandbox);
+els.next.onclick();const id=els.id.textContent;els.tolerance.value='0.02';els.tolerance.onchange();assert.equal(els.id.textContent,id,'Keep same sample on compression change');assert(els.stats.textContent.includes('5 段'));assert(!els.stats.textContent.includes('缓存核对一致'));
+els.eligible.value='yes';els.eligible.onchange();assert(els.main.hidden,'Length filtering follows selected compression');console.log('PASS: compression changes geometry statistics, keeps sample, updates eligibility');

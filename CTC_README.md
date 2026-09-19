@@ -60,3 +60,16 @@ systemctl --user stop mathwriting-ctc-trial.service
 词表仅从 train/synthetic 构建；valid 固定随机抽取最多 512 条可处理样本，未见 token 数也被报告。CTC token_error_rate 是编辑距离除以参考长度，插入很多时可以大于 100%；不等于 token classification accuracy。early blank collapse（预测全空白）会显式表现为 blank_fraction=1 和 token_error_rate=1，不算成功。
 
 模型数据集尚未包含你的采集设备样本。任何论文指标都不是本地试验的承诺。数据是 CC BY-NC-SA 4.0，参见官方许可。原始文件保留；没有修改 `sources/`。
+
+## 调整 Bézier 压缩程度
+
+`ctc_data.py --tolerance` 控制分段拟合容差，默认 `0.01` 与既有缓存相同。较小（如 `0.005`）通常保留更多曲线段；较大（如 `0.02`）通常生成更少曲线段。它不是固定压缩倍数，段数不保证严格单调；弧长限制、笔画端点与抬笔连接仍然保留。误差计算包含归一化 x/y 与按笔画弧长缩放的时间，因此不能直接等同于纯二维形状误差百分比。
+
+```bash
+python3 ctc_data.py --archive data/mathwriting-2024.tgz \
+  --out data/ctc-tolerance-002 --workers 8 --tolerance 0.02
+```
+
+程序拒绝覆盖已有缓存。改变容差需要生成新缓存，并重新检查输出长度与 CTC 对齐条件；不会自动更改既有模型或训练。`preparation.json` 记录数值及误差空间。Python 调用也支持 `curve_features(strokes, tolerance=0.02)` 和 `prepare(..., tolerance=0.02)`。
+
+预处理 HTML 的“压缩强度”提供 `0.005 / 0.01 / 0.02 / 0.05` 四档。运行 `python3 build_preprocess_viewer.py` 会为抽样笔迹预计算各档位，并从 `viewer_templates/preprocess.html` 生成页面。网页切换无需 GPU/服务端，只做几何对比，原模型识别结果不会重新计算。每档会更新段数、CTC 帧数、长度条件和近似几何偏差；同一样本共用固定视窗。默认 `0.01` 对照训练缓存验证，其余档位不写入训练数据库。

@@ -48,6 +48,22 @@ for sid,r in selected.items():
  strokes=[((np.array(s)[:,:2]-origin)/scale).tolist() for s in r['strokes']];curves=decode(f,strokes[0][0]);mean,maximum=distances(np.concatenate(strokes),curves)
  allxy=np.concatenate([np.concatenate(strokes),np.concatenate([c['cp'] for c in curves])]);lo=allxy.min(0);hi=allxy.max(0)
  records.append(dict(id=sid,split=r['split'],label=label,prediction=r.get('prediction'),recognition=r['recognition'],strokes=strokes,curves=curves,bounds=[*lo.tolist(),*hi.tolist()],points=len(xy),segments=n,frames=n*2,eligible=minimum<=n*2<=512,mean_error=mean,max_error=maximum,cache_equal=True))
+tolerances=(.005,.01,.02,.05)
+for idx,record in enumerate(records):
+ r=selected[record['id']];minimum=db.execute('SELECT min_frames FROM samples WHERE id=? AND split=?',(record['id'],record['split'])).fetchone()[0]
+ record['variants']={}
+ for tol in tolerances:
+  if tol==.01:
+   variant={k:record[k] for k in ('curves','segments','frames','eligible','mean_error','max_error')}
+  else:
+   f=curve_features(r['strokes'],tolerance=tol);curves=decode(f,record['strokes'][0][0]);mean,maximum=distances(np.concatenate(record['strokes']),curves)
+   variant=dict(curves=curves,segments=len(f),frames=2*len(f),eligible=minimum<=2*len(f)<=512,mean_error=mean,max_error=maximum)
+  record['variants'][str(tol)]=variant
+ # Fixed common viewport across all settings: switching compression does not rescale ink.
+ coords=np.concatenate([np.concatenate(record['strokes'])]+[np.concatenate([c['cp'] for c in v['curves']]) for v in record['variants'].values()])
+ record['bounds']=[*coords.min(0).tolist(),*coords.max(0).tolist()]
+ if idx%25==0:print('compression variants',idx+1,'/',len(records),flush=True)
+(OUT/'index.html').write_text(Path('viewer_templates/preprocess.html').read_text())
 (OUT/'data.js').write_text('window.SAMPLES='+json.dumps(records,ensure_ascii=False,separators=(',',':'))+';',encoding='utf8')
-(OUT/'manifest.json').write_text(json.dumps(dict(samples=len(records),seed=20260919,all_cache_features_exactly_reproduced=True,source='data/ctc-full/features.sqlite',geometry='Inverse decode cached float32 vectors; original start anchors translation',metric='One-way approximate raw-point distance to sampled pen-down curves; units normalized formula height, width fallback for flat ink',prediction_checkpoint=json.loads(Path('runs/token-error-analysis/summary.json').read_text())['step']),ensure_ascii=False,indent=2))
+(OUT/'manifest.json').write_text(json.dumps(dict(samples=len(records),tolerances=list(tolerances),baseline_tolerance=.01,seed=20260919,all_cache_features_exactly_reproduced=True,source='data/ctc-full/features.sqlite',geometry='Inverse decode cached float32 vectors; original start anchors translation',metric='One-way approximate raw-point distance to sampled pen-down curves; units normalized formula height, width fallback for flat ink',prediction_checkpoint=json.loads(Path('runs/token-error-analysis/summary.json').read_text())['step']),ensure_ascii=False,indent=2))
 print('Created',len(records),'samples; every cache feature verified',flush=True)
