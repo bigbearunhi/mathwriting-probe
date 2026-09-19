@@ -1,0 +1,15 @@
+/data/
+/runs/
+/vendor/
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+*.pt
+*.pth
+*.ckpt
+*.sqlite*
+*.log
+core
+core.*

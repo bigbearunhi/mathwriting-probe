@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/google-research/google-research",
+  "commit": "4700efb9afa54286b0e04473ba80a13e8461e25f",
+  "subdirectory": "mathwriting",
+  "archive_url": "https://storage.googleapis.com/mathwriting_data/mathwriting-2024-excerpt.tgz",
+  "archive_sha256": "cba038def001480a89962b25cb20a60df4c4145e94c86ef9d2af65f192cb82bc",
+  "downloaded": "2026-09-18",
+  "data_license": "CC BY-NC-SA 4.0",
+  "code_license": "Apache-2.0"
+}
